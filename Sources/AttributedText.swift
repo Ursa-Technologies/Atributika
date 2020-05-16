@@ -34,7 +34,10 @@ public enum DetectionType {
     case textCheckingType(String, NSTextCheckingResult.CheckingType)
     case range
     case symbol(String)
+<<<<<<< HEAD
     case keyword(String)
+=======
+>>>>>>> c2f9be4 (added $STOCK_TICKER to styles that can be highlightd)
 }
 
 public struct Detection {
