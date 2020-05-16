@@ -33,6 +33,7 @@ public enum DetectionType {
     case link(URL)
     case textCheckingType(String, NSTextCheckingResult.CheckingType)
     case range
+    case symbol(String)
 }
 
 public struct Detection {
@@ -107,6 +108,13 @@ extension AttributedTextProtocol {
     public func styleMentions(_ style: Style) -> AttributedText {
         let ranges = string.detectMentions()
         let ds = ranges.map { Detection(type: .mention(String(string[(string.index($0.lowerBound, offsetBy: 1))..<$0.upperBound])), style: style, range: $0, level: Int.max) }
+        return AttributedText(string: string, detections: detections + ds, baseStyle: baseStyle)
+    }
+    public func styleSymbols(_ style: Style) -> AttributedText {
+        let ranges = string.detectSymbols()
+        let ds = detections + ranges.map {
+            Detection(type: .symbol(String(string[string.index($0.lowerBound, offsetBy: 1)..<$0.upperBound])), style: style, range: $0, level: Int.max)
+        }
         return AttributedText(string: string, detections: detections + ds, baseStyle: baseStyle)
     }
     

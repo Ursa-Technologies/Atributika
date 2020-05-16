@@ -201,6 +201,10 @@ extension String {
         
         return detect(regex: "[@]\\w\\S*\\b")
     }
+
+    public func detectSymbols() -> [Range<String.Index>] {
+        return detect(regex: "[$][A-Z]+")
+    }
     
     public func detect(regex: String, options: NSRegularExpression.Options = []) -> [Range<String.Index>] {
         
