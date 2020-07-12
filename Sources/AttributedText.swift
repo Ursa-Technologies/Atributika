@@ -129,12 +129,21 @@ extension AttributedTextProtocol {
             Detection(type: .keyword(String(string[string.index($0.lowerBound, offsetBy: 1)..<$0.upperBound])), style: style, range: $0, level: Int.max)
         }
         var ds = detections
+        var offsets = 0
         for range in keywordRanges {
-            ret_val = ret_val.replacingOccurrences(of: "_", with: " ", options: [], range: range.range)
-            ret_val = ret_val.replacingOccurrences(of: "?", with: "", options: [], range: range.range)
-            let newRange = range.range.lowerBound ..< string.index(before: range.range.upperBound)
+            let currentRange = string.index(range.range.lowerBound, offsetBy: -offsets) ..< string.index(range.range.upperBound, offsetBy: -offsets)
+            ret_val = ret_val.replacingOccurrences(of: "_", with: " ", options: [], range: currentRange)
+            ret_val = ret_val.replacingOccurrences(of: "?", with: "", options: [], range: currentRange)
+            let newRange = currentRange.lowerBound ..< string.index(before: currentRange.upperBound)
             let detection = Detection(type: range.type, style: range.style, range: newRange, level: range.level)
             ds.append(detection)
+            offsets += 1
+            ds = ds.map({
+                if $0.range.lowerBound > detection.range.lowerBound {
+                    return Detection(type: $0.type, style: $0.style, range: string.index(before: range.range.lowerBound) ..< range.range.upperBound, level: $0.level)
+                }
+                return $0
+            })
         }
         return AttributedText(string: ret_val, detections: ds, baseStyle: baseStyle)
     }

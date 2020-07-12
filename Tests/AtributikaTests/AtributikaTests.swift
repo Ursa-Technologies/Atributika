@@ -271,14 +271,16 @@ class AtributikaTests: XCTestCase {
 
     func testKeywordFollowedByHashtag() {
 
-        let test = "?hello_world #Hash!!!"
+        let test = "?hello_world ?Y/Y ?four #Hash!!!"
             .styleKeywords(Style.font(.boldSystemFont(ofSize: 45)))
             .styleHashtags(Style.font(.boldSystemFont(ofSize: 4)))
             .attributedString
 
-        let reference = NSMutableAttributedString(string: "hello world #Hash!!!")
+        let reference = NSMutableAttributedString(string: "hello world Y/Y four #Hash!!!")
         reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 45)], range: NSMakeRange(0, 11))
-        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 4)], range: NSMakeRange(12, 5))
+        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 45)], range: NSMakeRange(12, 3))
+        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 45)], range: NSMakeRange(16, 4))
+        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 4)], range: NSMakeRange(21, 5))
 
         XCTAssertEqual(test, reference)
     }
