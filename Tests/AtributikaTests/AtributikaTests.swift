@@ -244,6 +244,44 @@ class AtributikaTests: XCTestCase {
         
         XCTAssertEqual(test, reference)
     }
+
+    func testSymbols() {
+
+        let test = "$hello $world $AAPL!!!"
+            .styleSymbols(Style.font(.boldSystemFont(ofSize: 45)))
+            .attributedString
+
+        let reference = NSMutableAttributedString(string: "$hello $world $AAPL!!!")
+        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 45)], range: NSMakeRange(14, 5))
+
+        XCTAssertEqual(test, reference)
+    }
+
+    func testKeywords() {
+
+        let test = "?hello_world!!!"
+            .styleKeywords(Style.font(.boldSystemFont(ofSize: 45)))
+            .attributedString
+
+        let reference = NSMutableAttributedString(string: "hello world!!!")
+        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 45)], range: NSMakeRange(0, 11))
+
+        XCTAssertEqual(test, reference)
+    }
+
+    func testKeywordFollowedByHashtag() {
+
+        let test = "?hello_world #Hash!!!"
+            .styleKeywords(Style.font(.boldSystemFont(ofSize: 45)))
+            .styleHashtags(Style.font(.boldSystemFont(ofSize: 4)))
+            .attributedString
+
+        let reference = NSMutableAttributedString(string: "hello world #Hash!!!")
+        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 45)], range: NSMakeRange(0, 11))
+        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 4)], range: NSMakeRange(12, 5))
+
+        XCTAssertEqual(test, reference)
+    }
     
     func testDataDetectorPhoneRaw() {
         
@@ -365,7 +403,7 @@ class AtributikaTests: XCTestCase {
         XCTAssertEqual(test,reference)
     }
     
-    
+
     func testOL() {
         var counter = 0
         let transformers: [TagTransformer] = [
@@ -688,9 +726,6 @@ class AtributikaTests: XCTestCase {
         XCTAssertEqual(tags.count, 0)
     }
 }
-
-
-
 
 #if os(Linux)
 extension AtributikaTests {

@@ -34,6 +34,7 @@ public enum DetectionType {
     case textCheckingType(String, NSTextCheckingResult.CheckingType)
     case range
     case symbol(String)
+    case keyword(String)
 }
 
 public struct Detection {
@@ -110,12 +111,32 @@ extension AttributedTextProtocol {
         let ds = ranges.map { Detection(type: .mention(String(string[(string.index($0.lowerBound, offsetBy: 1))..<$0.upperBound])), style: style, range: $0, level: Int.max) }
         return AttributedText(string: string, detections: detections + ds, baseStyle: baseStyle)
     }
+
+    /// style things like $AAPL
     public func styleSymbols(_ style: Style) -> AttributedText {
         let ranges = string.detectSymbols()
         let ds = detections + ranges.map {
             Detection(type: .symbol(String(string[string.index($0.lowerBound, offsetBy: 1)..<$0.upperBound])), style: style, range: $0, level: Int.max)
         }
         return AttributedText(string: string, detections: detections + ds, baseStyle: baseStyle)
+    }
+
+    /// style things like ?keyword_keyword
+    public func styleKeywords(_ style: Style) -> AttributedText {
+        var ret_val = string
+        let ranges = string.detectKeywords()
+        let keywordRanges = ranges.map {
+            Detection(type: .keyword(String(string[string.index($0.lowerBound, offsetBy: 1)..<$0.upperBound])), style: style, range: $0, level: Int.max)
+        }
+        var ds = detections
+        for range in keywordRanges {
+            ret_val = ret_val.replacingOccurrences(of: "_", with: " ", options: [], range: range.range)
+            ret_val = ret_val.replacingOccurrences(of: "?", with: "", options: [], range: range.range)
+            let newRange = range.range.lowerBound ..< string.index(before: range.range.upperBound)
+            let detection = Detection(type: range.type, style: range.style, range: newRange, level: range.level)
+            ds.append(detection)
+        }
+        return AttributedText(string: ret_val, detections: ds, baseStyle: baseStyle)
     }
     
     public func style(regex: String, options: NSRegularExpression.Options = [], style: Style) -> AttributedText {

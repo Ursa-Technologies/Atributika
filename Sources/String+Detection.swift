@@ -205,6 +205,10 @@ extension String {
     public func detectSymbols() -> [Range<String.Index>] {
         return detect(regex: "[$][A-Z]+")
     }
+
+    public func detectKeywords() -> [Range<String.Index>] {
+        return detect(regex: "[?]\\w\\S*\\b")
+    }
     
     public func detect(regex: String, options: NSRegularExpression.Options = []) -> [Range<String.Index>] {
         
