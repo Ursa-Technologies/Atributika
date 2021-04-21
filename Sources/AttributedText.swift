@@ -131,19 +131,39 @@ extension AttributedTextProtocol {
         var ds = detections
         var offsets = 0
         for range in keywordRanges {
-            let currentRange = string.index(range.range.lowerBound, offsetBy: -offsets) ..< string.index(range.range.upperBound, offsetBy: -offsets)
-            ret_val = ret_val.replacingOccurrences(of: "_", with: " ", options: [], range: currentRange)
-            ret_val = ret_val.replacingOccurrences(of: "?", with: "", options: [], range: currentRange)
-            let newRange = currentRange.lowerBound ..< string.index(before: currentRange.upperBound)
-            let detection = Detection(type: range.type, style: range.style, range: newRange, level: range.level)
+            var currentRange = string.index(range.range.lowerBound, offsetBy: -offsets) ..< string.index(range.range.upperBound, offsetBy: -offsets)
+            print("\n\n\n\(ret_val[currentRange])")
+            ret_val.remove(at: currentRange.lowerBound)
+            currentRange = currentRange.lowerBound ..< ret_val.index(before: currentRange.upperBound)
+//            ret_val = ret_val.replacingOccurrences(of: "?", with: "", options: [], range: currentRange)
+            print("no ? = \(ret_val)")
+            print("substring: \"\(ret_val[currentRange])\"")
+            print("currentRange: \(currentRange)")
+            ret_val.replaceSubrange(currentRange, with: ret_val[currentRange].replacingOccurrences(of: "_", with: " "))
+//            ret_val = ret_val.replacingOccurrences(of: "_", with: "\u{0020}", options: [], range: currentRange)
+            print("no _ = \(ret_val)")
+            print("substring: \"\(ret_val[currentRange])\"")
+            print("currentRange: \(currentRange)")
+//            while !ret_val[currentRange].starts(with: "?") {
+//                currentRange = string.index(before: currentRange.lowerBound) ..< string.index(before: currentRange.upperBound)
+//                offsets += 1
+//                print("\(ret_val[currentRange])")
+//            }
+
+//            let newRange = currentRange.lowerBound ..< string.index(before: currentRange.upperBound)
+//            print("newRange = \(newRange)")
+            let detection = Detection(type: range.type, style: range.style, range: currentRange, level: range.level)
             ds.append(detection)
+            print("ds.append = \(ds)")
             offsets += 1
+            print("offsets = \(offsets)")
             ds = ds.map({
                 if $0.range.lowerBound > detection.range.lowerBound {
                     return Detection(type: $0.type, style: $0.style, range: string.index(before: range.range.lowerBound) ..< range.range.upperBound, level: $0.level)
                 }
                 return $0
             })
+            print("ds final = \(ds)\n\n\n")
         }
         return AttributedText(string: ret_val, detections: ds, baseStyle: baseStyle)
     }

@@ -26,8 +26,11 @@ import Foundation
 import XCTest
 import Atributika
 
-
 class AtributikaTests: XCTestCase {
+    let kwFont = Font.boldSystemFont(ofSize: 1)
+    let symFont = Font.boldSystemFont(ofSize: 2)
+    let htFont = Font.boldSystemFont(ofSize: 3)
+    let menFont = Font.boldSystemFont(ofSize: 4)
     
     func testHello() {        
         let test = "Hello <b>World</b>!!!".style(tags:
@@ -234,13 +237,13 @@ class AtributikaTests: XCTestCase {
     func testHashCodes() {
         
         let test = "#Hello @World!!!"
-            .styleHashtags(Style.font(.boldSystemFont(ofSize: 45)))
-            .styleMentions(Style.foregroundColor(.red))
+            .styleHashtags(Style.font(htFont))
+            .styleMentions(Style.font(menFont))
             .attributedString
         
         let reference = NSMutableAttributedString(string: "#Hello @World!!!")
-        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 45)], range: NSMakeRange(0, 6))
-        reference.addAttributes([AttributedStringKey.foregroundColor: Color.red], range: NSMakeRange(7, 6))
+        reference.addAttributes([AttributedStringKey.font: htFont], range: NSMakeRange(0, 6))
+        reference.addAttributes([AttributedStringKey.font: menFont], range: NSMakeRange(7, 6))
         
         XCTAssertEqual(test, reference)
     }
@@ -248,11 +251,11 @@ class AtributikaTests: XCTestCase {
     func testSymbols() {
 
         let test = "$hello $world $AAPL!!!"
-            .styleSymbols(Style.font(.boldSystemFont(ofSize: 45)))
+            .styleSymbols(Style.font(symFont))
             .attributedString
 
         let reference = NSMutableAttributedString(string: "$hello $world $AAPL!!!")
-        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 45)], range: NSMakeRange(14, 5))
+        reference.addAttributes([AttributedStringKey.font: symFont], range: NSMakeRange(14, 5))
 
         XCTAssertEqual(test, reference)
     }
@@ -260,11 +263,11 @@ class AtributikaTests: XCTestCase {
     func testKeywords() {
 
         let test = "?hello_world!!!"
-            .styleKeywords(Style.font(.boldSystemFont(ofSize: 45)))
+            .styleKeywords(Style.font(kwFont))
             .attributedString
 
         let reference = NSMutableAttributedString(string: "hello world!!!")
-        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 45)], range: NSMakeRange(0, 11))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(0, 11))
 
         XCTAssertEqual(test, reference)
     }
@@ -272,19 +275,33 @@ class AtributikaTests: XCTestCase {
     func testKeywordFollowedByHashtag() {
 
         let test = "?hello_world ?Y/Y ?four #Hash!!!"
-            .styleKeywords(Style.font(.boldSystemFont(ofSize: 45)))
-            .styleHashtags(Style.font(.boldSystemFont(ofSize: 4)))
+            .styleKeywords(Style.font(kwFont))
+            .styleHashtags(Style.font(htFont))
             .attributedString
 
         let reference = NSMutableAttributedString(string: "hello world Y/Y four #Hash!!!")
-        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 45)], range: NSMakeRange(0, 11))
-        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 45)], range: NSMakeRange(12, 3))
-        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 45)], range: NSMakeRange(16, 4))
-        reference.addAttributes([AttributedStringKey.font: Font.boldSystemFont(ofSize: 4)], range: NSMakeRange(21, 5))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(0, 11))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(12, 3))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(16, 4))
+        reference.addAttributes([AttributedStringKey.font: htFont], range: NSMakeRange(21, 5))
 
         XCTAssertEqual(test, reference)
     }
-    
+
+    func testKeywordWithEmoji() {
+
+        let test = "😁 ?hello_world 😁 ?Y/Y ?four!!!"
+            .styleKeywords(Style.font(kwFont))
+            .attributedString
+
+        let reference = NSMutableAttributedString(string: "😁 hello world 😁 Y/Y four!!!")
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(3, 11))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(18, 3))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(22, 4))
+
+        XCTAssertEqual(test, reference)
+    }
+
     func testDataDetectorPhoneRaw() {
         
         let test = "Call me (888)555-5512".style(textCheckingTypes: [.phoneNumber],
@@ -404,7 +421,6 @@ class AtributikaTests: XCTestCase {
         
         XCTAssertEqual(test,reference)
     }
-    
 
     func testOL() {
         var counter = 0
