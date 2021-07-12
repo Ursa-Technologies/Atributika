@@ -290,14 +290,16 @@ class AtributikaTests: XCTestCase {
 
     func testKeywordWithEmoji() {
 
-        let test = "😁 ?hello_world 😁 ?Y/Y ?four!!!"
+        let test = "🎁 Mixed #test test ?hello_world 😁 ?Y/Y ?four!!!"
             .styleKeywords(Style.font(kwFont))
+            .styleHashtags(Style.font(htFont))
             .attributedString
 
-        let reference = NSMutableAttributedString(string: "😁 hello world 😁 Y/Y four!!!")
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(3, 11))
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(18, 3))
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(22, 4))
+        let reference = NSMutableAttributedString(string: "🎁 Mixed #test test hello world 😁 Y/Y four!!!")
+        reference.addAttributes([AttributedStringKey.font: htFont], range: NSMakeRange(9, 5))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(20, 11))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(35, 3))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(39, 4))
 
         XCTAssertEqual(test, reference)
     }
