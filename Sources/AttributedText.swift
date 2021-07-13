@@ -136,14 +136,15 @@ extension AttributedTextProtocol {
             currentRange = currentRange.lowerBound ..< ret_val.index(before: currentRange.upperBound)
             ret_val.replaceSubrange(currentRange, with: ret_val[currentRange].replacingOccurrences(of: "_", with: " "))
             let detection = Detection(type: range.type, style: range.style, range: currentRange, level: range.level)
-            ds.append(detection)
-            offsets += 1
             ds = ds.map({
                 if $0.range.lowerBound > detection.range.lowerBound {
-                    return Detection(type: $0.type, style: $0.style, range: string.index(before: range.range.lowerBound) ..< range.range.upperBound, level: $0.level)
+                    return Detection(type: $0.type, style: $0.style, range: string.index(before: $0.range.lowerBound) ..< string.index(before: $0.range.upperBound), level: $0.level)
                 }
                 return $0
             })
+            ds.append(detection)
+            offsets += 1
+
         }
         return AttributedText(string: ret_val, detections: ds, baseStyle: baseStyle)
     }

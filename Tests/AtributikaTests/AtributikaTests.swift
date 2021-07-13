@@ -304,6 +304,25 @@ class AtributikaTests: XCTestCase {
         XCTAssertEqual(test, reference)
     }
 
+    func testKeywordWithUnicode() {
+
+        let test = "$MSFT to… ?acquire #CyberSecurity software RiskIQ for $500M announcing soon. RiskIQ bolsters security capabilities for $MSFT's Windows and ?Azure."
+            .styleSymbols(Style.font(symFont))
+            .styleKeywords(Style.font(kwFont))
+            .styleHashtags(Style.font(htFont))
+            .attributedString
+
+        let reference = NSMutableAttributedString(string: "$MSFT to… acquire #CyberSecurity software RiskIQ for $500M announcing soon. RiskIQ bolsters security capabilities for $MSFT's Windows and Azure.")
+        reference.addAttributes([AttributedStringKey.font: symFont], range: NSMakeRange(0, 5))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(10, 7))
+        reference.addAttributes([AttributedStringKey.font: htFont], range: NSMakeRange(18, 14))
+        reference.addAttributes([AttributedStringKey.font: symFont], range: NSMakeRange(118, 5))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(138, 5))
+
+        XCTAssertEqual(test, reference)
+    }
+
+
     func testDataDetectorPhoneRaw() {
         
         let test = "Call me (888)555-5512".style(textCheckingTypes: [.phoneNumber],
