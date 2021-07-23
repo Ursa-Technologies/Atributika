@@ -40,45 +40,99 @@ public enum DetectionType {
 public struct Detection {
     public let type: DetectionType
     public let style: Style
-    public let range: Range<String.Index>
+    public var range: Range<String.Index>
+    public let isKeyword: Bool
     let level: Int
 }
 
 public protocol AttributedTextProtocol {
     var string: String {get}
     var detections: [Detection] {get}
+    var highlightedDetections: [Detection] {get}
     var baseStyle: Style {get}
 }
 
 extension AttributedTextProtocol {
-    
+
     fileprivate func makeAttributedString(getAttributes: (Style)-> [AttributedStringKey: Any]) -> NSAttributedString {
-        let attributedString = NSMutableAttributedString(string: string, attributes: getAttributes(baseStyle))
-        
-        let sortedDetections = detections.sorted {
-            $0.level < $1.level
+
+        let sortedRangeDetections = detections.sorted {
+            $0.range.lowerBound < $1.range.lowerBound
         }
-        
+
+        var ranges: [String: Range<String.Index>] = [:]
+        var offset = 0
+        var fString = string
+        for detection in sortedRangeDetections {
+            if ranges["\(detection)"] != nil {
+                continue
+            }
+            var range = detection.range
+
+            // Step Forward for each previous Keyword
+            for _ in 0..<offset {
+                range = fString.index(before: range.lowerBound)..<fString.index(before: range.upperBound)
+            }
+
+            // Step Backwards twice for each － or …
+            let preString = fString[fString.startIndex..<range.lowerBound]
+            let count = preString.components(separatedBy: "－").count + preString.components(separatedBy: "…").count - 2
+            var oddOffset = false
+            for _ in 0..<count {
+                if fString[range].starts(with: "?") {
+                    oddOffset = true
+                    break
+                }
+                range = fString.index(range.lowerBound, offsetBy: 2)..<fString.index(range.upperBound, offsetBy: 2)
+            }
+
+            if detection.isKeyword {
+                // Remove the ?
+                fString.remove(at: range.lowerBound)
+
+                // Shrink the range by one
+                if oddOffset {
+                    range = fString.index(range.lowerBound, offsetBy: 2)..<fString.index(range.upperBound, offsetBy: 2)
+                }
+                range = range.lowerBound..<fString.index(before: range.upperBound)
+
+                // Remove any _
+                fString = fString.replacingOccurrences(of: "_", with: " ", options: [], range: range)
+
+                offset += 1
+            }
+
+            // Don't double run this
+            ranges["\(detection)"] = range
+        }
+
+        let attributedString = NSMutableAttributedString(string: fString, attributes: getAttributes(baseStyle))
+
+        let sortedDetections = detections.sorted { $0.level < $1.level }
+
         for d in sortedDetections {
             let attrs = getAttributes(d.style)
-            if attrs.count > 0 {
-                attributedString.addAttributes(attrs, range: NSRange(d.range, in: string))
+            if attrs.count > 0, let range = ranges["\(d)"] {
+                attributedString.addAttributes(attrs, range: NSRange(range, in: fString))
+
+                highlightedDetections.append(Detection(type: d.type, style: d.style, range: range, isKeyword: d.isKeyword, level: d.level))
             }
         }
-        
+
         return attributedString
     }
 }
 
 public final class AttributedText: AttributedTextProtocol {
-
     public let string: String
     public let detections: [Detection]
+    public let highlightedDetections: [Detection]
     public let baseStyle: Style
-    
+
     init(string: String, detections: [Detection], baseStyle: Style) {
         self.string = string
         self.detections = detections
+        self.highlightedDetections = detections
         self.baseStyle = baseStyle
     }
 
@@ -92,23 +146,23 @@ public final class AttributedText: AttributedTextProtocol {
 }
 
 extension AttributedTextProtocol {
-    
+
     /// style the whole string
     public func styleAll(_ style: Style) -> AttributedText {
         return AttributedText(string: string, detections: detections, baseStyle: baseStyle.merged(with: style))
     }
-    
+
     /// style things like #xcode #mentions
     public func styleHashtags(_ style: Style) -> AttributedText {
         let ranges = string.detectHashTags()
-        let ds = ranges.map { Detection(type: .hashtag(String(string[(string.index($0.lowerBound, offsetBy: 1))..<$0.upperBound])), style: style, range: $0, level: Int.max) }
+        let ds = ranges.map { Detection(type: .hashtag(String(string[(string.index($0.lowerBound, offsetBy: 1))..<$0.upperBound])), style: style, range: $0, isKeyword: false, level: Int.max) }
         return AttributedText(string: string, detections: detections + ds, baseStyle: baseStyle)
     }
-    
+
     /// style things like @John @all
     public func styleMentions(_ style: Style) -> AttributedText {
         let ranges = string.detectMentions()
-        let ds = ranges.map { Detection(type: .mention(String(string[(string.index($0.lowerBound, offsetBy: 1))..<$0.upperBound])), style: style, range: $0, level: Int.max) }
+        let ds = ranges.map { Detection(type: .mention(String(string[(string.index($0.lowerBound, offsetBy: 1))..<$0.upperBound])), style: style, range: $0, isKeyword: false, level: Int.max) }
         return AttributedText(string: string, detections: detections + ds, baseStyle: baseStyle)
     }
 
@@ -116,110 +170,95 @@ extension AttributedTextProtocol {
     public func styleSymbols(_ style: Style) -> AttributedText {
         let ranges = string.detectSymbols()
         let ds = detections + ranges.map {
-            Detection(type: .symbol(String(string[string.index($0.lowerBound, offsetBy: 1)..<$0.upperBound])), style: style, range: $0, level: Int.max)
+            Detection(type: .symbol(String(string[string.index($0.lowerBound, offsetBy: 1)..<$0.upperBound])), style: style, range: $0, isKeyword: false, level: Int.max)
         }
         return AttributedText(string: string, detections: detections + ds, baseStyle: baseStyle)
     }
 
     /// style things like ?keyword_keyword
     public func styleKeywords(_ style: Style) -> AttributedText {
-        var ret_val = string
         let ranges = string.detectKeywords()
-        let keywordRanges = ranges.map {
-            Detection(type: .keyword(String(string[string.index($0.lowerBound, offsetBy: 1)..<$0.upperBound])), style: style, range: $0, level: Int.max)
+        let ds = detections + ranges.map {
+            Detection(type: .keyword(String(string[string.index($0.lowerBound, offsetBy: 1)..<$0.upperBound])), style: style, range: $0, isKeyword: true, level: Int.max)
         }
-        var ds = detections
-        var offsets = 0
-        for range in keywordRanges {
-            var currentRange = string.index(range.range.lowerBound, offsetBy: -offsets) ..< string.index(range.range.upperBound, offsetBy: -offsets)
-            ret_val.remove(at: currentRange.lowerBound)
-            currentRange = currentRange.lowerBound ..< ret_val.index(before: currentRange.upperBound)
-            ret_val.replaceSubrange(currentRange, with: ret_val[currentRange].replacingOccurrences(of: "_", with: " "))
-            let detection = Detection(type: range.type, style: range.style, range: currentRange, level: range.level)
-            ds = ds.map({
-                if $0.range.lowerBound > detection.range.lowerBound {
-                    return Detection(type: $0.type, style: $0.style, range: string.index(before: $0.range.lowerBound) ..< string.index(before: $0.range.upperBound), level: $0.level)
-                }
-                return $0
-            })
-            ds.append(detection)
-            offsets += 1
-
-        }
-        return AttributedText(string: ret_val, detections: ds, baseStyle: baseStyle)
+        return AttributedText(string: string, detections: detections + ds, baseStyle: baseStyle)
     }
-    
+
     public func style(regex: String, options: NSRegularExpression.Options = [], style: Style) -> AttributedText {
         let ranges = string.detect(regex: regex, options: options)
-        let ds = ranges.map { Detection(type: .regex(regex), style: style, range: $0, level: Int.max) }
+        let ds = ranges.map { Detection(type: .regex(regex), style: style, range: $0, isKeyword: false, level: Int.max) }
         return AttributedText(string: string, detections: detections + ds, baseStyle: baseStyle)
     }
-    
+
     public func style(textCheckingTypes: NSTextCheckingResult.CheckingType, style: Style) -> AttributedText {
         let ranges = string.detect(textCheckingTypes: textCheckingTypes)
-        let ds = ranges.map { Detection(type: .textCheckingType(String(string[$0]), textCheckingTypes), style: style, range: $0, level: Int.max) }
+        let ds = ranges.map { Detection(type: .textCheckingType(String(string[$0]), textCheckingTypes), style: style, range: $0, isKeyword: false, level: Int.max) }
         return AttributedText(string: string, detections: detections + ds, baseStyle: baseStyle)
     }
-    
+
     public func stylePhoneNumbers(_ style: Style) -> AttributedText {
         let ranges = string.detect(textCheckingTypes: [.phoneNumber])
-        let ds = ranges.map { Detection(type: .phoneNumber(String(string[$0])), style: style, range: $0, level: Int.max) }
+        let ds = ranges.map { Detection(type: .phoneNumber(String(string[$0])), style: style, range: $0, isKeyword: false, level: Int.max) }
         return AttributedText(string: string, detections: detections + ds, baseStyle: baseStyle)
     }
-    
+
     public func styleLinks(_ style: Style) -> AttributedText {
         let ranges = string.detect(textCheckingTypes: [.link])
-        
+
         #if swift(>=4.1)
         let ds = ranges.compactMap { range in
-            URL(string: String(string[range])).map { Detection(type: .link($0), style: style, range: range, level: Int.max) }
+            URL(string: String(string[range])).map { Detection(type: .link($0), style: style, range: range, isKeyword: false, level: Int.max) }
         }
         #else
         let ds = ranges.flatMap { range in
             URL(string: String(string[range])).map { Detection(type: .link($0), style: style, range: range) }
         }
         #endif
-        
+
         return AttributedText(string: string, detections: detections + ds, baseStyle: baseStyle)
     }
-    
+
     public func style(range: Range<String.Index>, style: Style) -> AttributedText {
-        let d = Detection(type: .range, style: style, range: range, level: Int.max)
+        let d = Detection(type: .range, style: style, range: range, isKeyword: false, level: Int.max)
         return AttributedText(string: string, detections: detections + [d], baseStyle: baseStyle)
     }
 }
 
 extension String: AttributedTextProtocol {
-    
+
     public var string: String {
         return self
     }
-    
+
     public var detections: [Detection] {
         return []
     }
-    
+
+    public var highlightedDetections: [Detection] {
+        return []
+    }
+
     public var baseStyle: Style {
         return Style()
     }
-    
+
     public func style(tags: [Style], transformers: [TagTransformer] = [TagTransformer.brTransformer], tuner: (Style, Tag) -> Style = { s, _ in return  s}) -> AttributedText {
         let (string, tagsInfo) = detectTags(transformers: transformers)
-        
+
         var ds: [Detection] = []
-        
+
         tagsInfo.forEach { t in
-            
+
             if let style = (tags.first { style in style.name.lowercased() == t.tag.name.lowercased() }) {
-                ds.append(Detection(type: .tag(t.tag), style: tuner(style, t.tag), range: t.range, level: t.level))
+                ds.append(Detection(type: .tag(t.tag), style: tuner(style, t.tag), range: t.range, isKeyword: false, level: t.level))
             } else {
-                ds.append(Detection(type: .tag(t.tag), style: Style(), range: t.range, level: t.level))
+                ds.append(Detection(type: .tag(t.tag), style: Style(), range: t.range, isKeyword: false, level: t.level))
             }
         }
-        
+
         return AttributedText(string: string, detections: ds, baseStyle: baseStyle)
     }
-    
+
     public func style(tags: Style..., transformers: [TagTransformer] = [TagTransformer.brTransformer], tuner: (Style, Tag) -> Style = { s, _ in return  s}) -> AttributedText {
         return style(tags: tags, transformers: transformers, tuner: tuner)
     }
@@ -234,20 +273,33 @@ extension String: AttributedTextProtocol {
 }
 
 extension NSAttributedString: AttributedTextProtocol {
-    
     public var detections: [Detection] {
-        
+
         var ds: [Detection] = []
-        
+
         enumerateAttributes(in: NSMakeRange(0, length), options: []) { (attributes, range, _) in
             if let range = Range(range, in: self.string) {
-                ds.append(Detection(type: .range, style: Style("", attributes), range: range, level: Int.max))
+                ds.append(Detection(type: .range, style: Style("", attributes), range: range, isKeyword: false, level: Int.max))
             }
         }
-        
+
         return ds
     }
-    
+
+    public var highlightedDetections: [Detection] {
+
+        var ds: [Detection] = []
+
+        enumerateAttributes(in: NSMakeRange(0, length), options: []) { (attributes, range, _) in
+            if let range = Range(range, in: self.string) {
+                ds.append(Detection(type: .range, style: Style("", attributes), range: range, isKeyword: false, level: Int.max))
+            }
+        }
+
+        return ds
+
+    }
+
     public var baseStyle: Style {
         return Style()
     }
