@@ -249,7 +249,6 @@ class AtributikaTests: XCTestCase {
     }
 
     func testSymbols() {
-
         let test = "$hello $world $AAPL!!!"
             .styleSymbols(Style.font(symFont))
             .attributedString
@@ -261,7 +260,6 @@ class AtributikaTests: XCTestCase {
     }
 
     func testKeywords() {
-
         let test = "?hello_world!!!"
             .styleKeywords(Style.font(kwFont))
             .attributedString
@@ -273,7 +271,6 @@ class AtributikaTests: XCTestCase {
     }
 
     func testKeywordFollowedByHashtag() {
-
         let test = "?hello_world ?Y/Y ?four #Hash!!!"
             .styleKeywords(Style.font(kwFont))
             .styleHashtags(Style.font(htFont))
@@ -289,7 +286,6 @@ class AtributikaTests: XCTestCase {
     }
 
     func testKeywordWithEmoji() {
-
         let test = "🎁— Mixed #hash test… ?hello_world 😁 ?Y/Y ?four!!!"
             .styleKeywords(Style.font(kwFont))
             .styleHashtags(Style.font(htFont))
@@ -305,7 +301,6 @@ class AtributikaTests: XCTestCase {
     }
 
     func testKeywordWithUnicode() {
-
         let test = "$MSFT to… ?acquire #CyberSecurity software RiskIQ for $500M announcing soon. RiskIQ bolsters security capabilities for $MSFT's Windows and ?Azure."
             .styleSymbols(Style.font(symFont))
             .styleKeywords(Style.font(kwFont))
@@ -323,7 +318,6 @@ class AtributikaTests: XCTestCase {
     }
 
     func testDoubleKeywordAtEndWithNoPunctuation() {
-
         let test = "$JBL adds new $1B ?stock_buyback over next 2 years; roughly ~13% of current ?market_cap"
             .styleSymbols(Style.font(symFont))
             .styleKeywords(Style.font(kwFont))
@@ -482,7 +476,6 @@ class AtributikaTests: XCTestCase {
     }
     
     func testStyleBuilder() {
-
         let s = Style
             .font(.boldSystemFont(ofSize: 12), .normal)
             .font(.systemFont(ofSize: 12), .highlighted)
@@ -498,7 +491,6 @@ class AtributikaTests: XCTestCase {
     }
 
     func testStyleBuilder2() {
-
         let s = Style
             .foregroundColor(.red, .normal)
             .font(.boldSystemFont(ofSize: 12), .normal)

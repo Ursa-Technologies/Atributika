@@ -90,7 +90,6 @@ public final class AttributedText: AttributedTextProtocol {
         var ranges: [String: Range<String.Index>] = [:]
         var offset = 0
         var fString = string
-        print("\(fString)")
         for detection in sortedDetections {
             if ranges["\(detection)"] != nil {
                 continue
@@ -102,28 +101,11 @@ public final class AttributedText: AttributedTextProtocol {
                 range = fString.index(before: range.lowerBound) ..< AttributedText.beforeOrEnd(fString, bound: range.upperBound)
             }
 
-            // Step Backwards twice for each － or …
-            let preString = fString[fString.startIndex..<range.lowerBound]
-            print("\(preString)")
-            let count = preString.components(separatedBy: "－").count + preString.components(separatedBy: "…").count - 2
-            var oddOffset = false
-            for _ in 0..<count {
-                if fString[range].starts(with: "?") {
-                    oddOffset = true
-                    break
-                }
-                range = fString.index(range.lowerBound, offsetBy: 2) ..< fString.index(range.upperBound, offsetBy: 2)
-                print("\(fString[range])")
-            }
-
             if detection.isKeyword {
                 // Remove the ?
                 fString.remove(at: range.lowerBound)
 
                 // Shrink the range by one
-                if oddOffset {
-                    range = fString.index(range.lowerBound, offsetBy: 2)..<fString.index(range.upperBound, offsetBy: 2)
-                }
                 range = range.lowerBound ..< AttributedText.beforeOrEnd(fString, bound: range.upperBound)
 
                 // Remove any _
