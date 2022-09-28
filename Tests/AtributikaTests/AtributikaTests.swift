@@ -322,6 +322,20 @@ class AtributikaTests: XCTestCase {
         XCTAssertEqual(test, reference)
     }
 
+    func testDoubleKeywordAtEndWithNoPunctuation() {
+        let test = "$JBL adds new $1B ?stock_buyback over next 2 years; roughly ~13% of current ?market_cap"
+            .styleSymbols(Style.font(symFont))
+            .styleKeywords(Style.font(kwFont))
+            .attributedString
+
+        let reference = NSMutableAttributedString(string: "$JBL adds new $1B stock buyback over next 2 years; roughly ~13% of current market cap")
+        reference.addAttributes([AttributedStringKey.font: symFont], range: NSMakeRange(0, 4))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(18, 13))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(75, 10))
+
+        XCTAssertEqual(test, reference)
+    }
+    
 
     func testDataDetectorPhoneRaw() {
         
