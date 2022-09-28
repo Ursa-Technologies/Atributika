@@ -127,8 +127,6 @@ public final class AttributedText: AttributedTextProtocol {
                 hd.append(Detection(type: d.type, style: d.style, range: range, isKeyword: d.isKeyword, level: d.level))
             }
         }
-        print("\(fString)")
-        print("\(hd)")
 
         self.highlightedDetections = hd
         self.highlightedString = fString
