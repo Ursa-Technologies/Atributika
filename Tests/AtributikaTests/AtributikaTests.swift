@@ -323,6 +323,7 @@ class AtributikaTests: XCTestCase {
     }
 
     func testDoubleKeywordAtEndWithNoPunctuation() {
+
         let test = "$JBL adds new $1B ?stock_buyback over next 2 years; roughly ~13% of current ?market_cap"
             .styleSymbols(Style.font(symFont))
             .styleKeywords(Style.font(kwFont))
@@ -335,7 +336,7 @@ class AtributikaTests: XCTestCase {
 
         XCTAssertEqual(test, reference)
     }
-    
+
 
     func testDataDetectorPhoneRaw() {
         
