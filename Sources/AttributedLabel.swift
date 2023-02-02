@@ -171,12 +171,12 @@ import UIKit
         
         if let attributedText = state.attributedText {
             
-            let highlightableDetections = attributedText.detections.filter { $0.style.typedAttributes[.highlighted] != nil }
+            let highlightableDetections = attributedText.highlightedDetections.filter { $0.style.typedAttributes[.highlighted] != nil }
             
             highlightableDetections.forEach { detection in
-                let nsrange = NSRange(detection.range, in: attributedText.string)
+                let nsrange = NSRange(detection.range, in: attributedText.highlightedString)
                 textView.layoutManager.enumerateEnclosingRects(forGlyphRange: nsrange, withinSelectedGlyphRange: NSRange(location: NSNotFound, length: 0), in: textView.textContainer, using: { (rect, stop) in
-                    self.addDetectionAreaButton(frame: rect, detection: detection, text: String(attributedText.string[detection.range]))
+                    self.addDetectionAreaButton(frame: rect, detection: detection, text: String(attributedText.highlightedString[detection.range]))
                 })
             }
         }

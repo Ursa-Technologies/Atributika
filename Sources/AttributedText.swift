@@ -104,13 +104,10 @@ public final class AttributedText: AttributedTextProtocol {
             if detection.isKeyword {
                 // Remove the ?
                 fString.remove(at: range.lowerBound)
-
                 // Shrink the range by one
                 range = range.lowerBound ..< AttributedText.beforeOrEnd(fString, bound: range.upperBound)
-
                 // Remove any _
                 fString = fString.replacingOccurrences(of: "_", with: " ", options: [], range: range)
-
                 offset += 1
             }
 
@@ -118,17 +115,14 @@ public final class AttributedText: AttributedTextProtocol {
             ranges["\(detection)"] = range
         }
 
-        var hd: [Detection] = []
-
-        let sorted = detections.sorted { $0.level < $1.level }
-
-        for d in sorted {
+        var detectionDict: [String: Detection] = [:]
+        for d in detections {
             if let range = ranges["\(d)"] {
-                hd.append(Detection(type: d.type, style: d.style, range: range, isKeyword: d.isKeyword, level: d.level))
+                detectionDict["\(d)"] = Detection(type: d.type, style: d.style, range: range, isKeyword: d.isKeyword, level: d.level)
             }
         }
 
-        self.highlightedDetections = hd
+        self.highlightedDetections = detectionDict.values.sorted { $0.level < $1.level }
         self.highlightedString = fString
     }
 

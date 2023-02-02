@@ -331,7 +331,6 @@ class AtributikaTests: XCTestCase {
         XCTAssertEqual(test, reference)
     }
 
-
     func testDataDetectorPhoneRaw() {
         
         let test = "Call me (888)555-5512".style(textCheckingTypes: [.phoneNumber],
