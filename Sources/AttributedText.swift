@@ -97,9 +97,11 @@ public final class AttributedText: AttributedTextProtocol {
             var range = detection.range
 
             // Step Forward for each previous Keyword
-            let nsrange = NSRange(detection.range, in: string)
-            let newLower = string.index(range.lowerBound, offsetBy: -offset)
-            range = newLower ..< string.index(newLower, offsetBy: nsrange.length)
+            if offset > 0 {
+                let nsrange = NSRange(detection.range, in: string)
+                let newLower = string.index(range.lowerBound, offsetBy: -offset)
+                range = newLower ..< string.index(newLower, offsetBy: nsrange.length)
+            }
 
             if detection.isKeyword {
                 // Remove the ?
