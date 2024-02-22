@@ -26,88 +26,88 @@ public struct TagTransformer {
     public let tagName: String
     public let tagType: TagType
     public let transform: (Tag) -> String
-    
+
     public init(tagName: String, tagType: TagType, replaceValue: String) {
         self.tagName = tagName
         self.tagType = tagType
         self.transform = { _ in replaceValue }
     }
-    
+
     public init(tagName: String, tagType: TagType, transform: @escaping (Tag) -> String) {
         self.tagName = tagName
         self.tagType = tagType
         self.transform = transform
     }
-    
+
     public static var brTransformer: TagTransformer {
         return TagTransformer(tagName: "br", tagType: .start , replaceValue: "\n")
     }
 }
 
 extension String {
-    
+
     private func parseTag(_ tagString: String, parseAttributes: Bool) -> Tag? {
         let tagScanner = Scanner(string: tagString)
-        
+
         guard let tagName = tagScanner.scanCharacters(from: CharacterSet.alphanumerics) else {
             return nil
         }
-        
+
         var attributes = [String: String]()
-        
+
         while parseAttributes && !tagScanner.isAtEnd {
-            
+
             guard let name = tagScanner.scanUpTo("=") else {
                 break
             }
-            
+
             guard tagScanner.scanString("=") != nil else {
                 break
             }
-            
+
             let startsFromSingleQuote = (tagScanner.scanString("'") != nil)
             if !startsFromSingleQuote {
                 guard tagScanner.scanString("\"") != nil else {
                     break
                 }
             }
-            
+
             let quote = startsFromSingleQuote ? "'" : "\""
-            
+
             let value = tagScanner.scanUpTo(quote) ?? ""
-            
+
             guard tagScanner.scanString(quote) != nil else {
                 break
             }
-            
+
             attributes[name] = value.replacingOccurrences(of: "&quot;", with: "\"")
         }
-        
+
         return Tag(name: tagName, attributes: attributes)
     }
-    
+
     public func detectTags(transformers: [TagTransformer] = []) -> (string: String, tagsInfo: [TagInfo]) {
-        
+
         struct TagInfoInternal {
             public let tag: Tag
             public let rangeStart: Int
             public let rangeEnd: Int
             public let level: Int
         }
-        
+
         let scanner = Scanner(string: self)
         scanner.charactersToBeSkipped = nil
         var resultString = String()
         var tagsResult = [TagInfoInternal]()
         var tagsStack = [(Tag, Int, Int)]()
-        
+
         while !scanner.isAtEnd {
-            
+
             if let textString = scanner.scanUpToCharacters(from: CharacterSet(charactersIn: "<&")) {
                 resultString.append(textString)
             } else {
                 if scanner.scanString("<") != nil {
-                    
+
                     if scanner.isAtEnd {
                         resultString.append("<")
                     } else {
@@ -116,12 +116,12 @@ extension String {
                         if CharacterSet.letters.contains(nextChar.unicodeScalars.first!) || (nextChar == "/") {
                             let tagType = scanner.scanString("/") == nil ? TagType.start : TagType.end
                             if let tagString = scanner.scanUpTo(">") {
-                                
+
                                 if scanner.scanString(">") != nil {
                                     if let tag = parseTag(tagString, parseAttributes: tagType == .start ) {
-                                        
+
                                         let resultTextEndIndex = resultString.count
-                                        
+
                                         if let transformer = transformers.first(where: {
                                             $0.tagName.lowercased() == tag.name.lowercased() && $0.tagType == tagType
                                         }) {
@@ -192,46 +192,46 @@ extension String {
                 }
             }
         }
-        
+
         return (resultString, tagsResult.map { TagInfo(tag: $0.tag, range: resultString.index(resultString.startIndex, offsetBy: $0.rangeStart)..<resultString.index(resultString.startIndex, offsetBy: $0.rangeEnd), level: $0.level) })
     }
-    
+
     public func detectHashTags() -> [Range<String.Index>] {
-        
+
         return detect(regex: "#[^[:punct:][:space:]]+")
     }
-    
+
     public func detectMentions() -> [Range<String.Index>] {
-        
+
         return detect(regex: "@[^[:punct:][:space:]]+")
     }
 
     public func detectSymbols() -> [Range<String.Index>] {
-        return detect(regex: "[$][A-Z]+")
+        return detect(regex: "\u{2009}[_a-zA-Z0-9]+")
     }
 
     public func detectKeywords() -> [Range<String.Index>] {
-        return detect(regex: "[?]\\w\\S*\\b")
+        return detect(regex: "\u{200A}\\w\\S*\\b")
     }
-    
+
     public func detect(regex: String, options: NSRegularExpression.Options = []) -> [Range<String.Index>] {
-        
+
         var ranges = [Range<String.Index>]()
-        
+
         let dataDetector = try? NSRegularExpression(pattern: regex, options: options)
         dataDetector?.enumerateMatches(in: self, options: [], range: NSMakeRange(0, (self as NSString).length), using: { (result, flags, _) in
             if let r = result, let range = Range(r.range, in: self) {
                 ranges.append(range)
             }
         })
-        
+
         return ranges
     }
-    
+
     public func detect(textCheckingTypes: NSTextCheckingResult.CheckingType) -> [Range<String.Index>] {
-        
+
         var ranges = [Range<String.Index>]()
-        
+
         let dataDetector = try? NSDataDetector(types: textCheckingTypes.rawValue)
         dataDetector?.enumerateMatches(in: self, options: [], range: NSMakeRange(0, (self as NSString).length), using: { (result, flags, _) in
             if let r = result, let range = Range(r.range, in: self) {
