@@ -207,7 +207,7 @@ extension String {
     }
 
     public func detectSymbols() -> [Range<String.Index>] {
-        return detect(regex: "\u{2009}[_a-zA-Z0-9]+")
+        return detect(regex: "\u{2009}[-.&_a-zA-Z0-9]+")
     }
 
     public func detectKeywords() -> [Range<String.Index>] {

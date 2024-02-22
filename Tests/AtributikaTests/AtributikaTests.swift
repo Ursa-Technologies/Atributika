@@ -302,6 +302,17 @@ class AtributikaTests: XCTestCase {
         XCTAssertEqual(test, reference)
     }
 
+    func testKeywordWithDash() {
+        let test = "\u{2009}Co&ca-Co.la up 2%"
+            .styleSymbols(Style.font(symFont))
+            .attributedString
+
+        let reference = NSMutableAttributedString(string: "\u{2009}Co&ca-Co.la up 2%")
+        reference.addAttributes([AttributedStringKey.font: symFont], range: NSMakeRange(0, 12))
+
+        XCTAssertEqual(test, reference)
+    }
+
     func testKeywordWithUnicode() {
         let test = "\u{2009}MSFT to… \u{200A}acquire #CyberSecurity software RiskIQ for $500M announcing soon. RiskIQ bolsters security capabilities for \u{2009}MSFT's Windows and \u{200A}Azure."
             .styleSymbols(Style.font(symFont))
