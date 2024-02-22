@@ -249,84 +249,86 @@ class AtributikaTests: XCTestCase {
     }
 
     func testSymbols() {
-        let test = "$hello $world $AAPL!!!"
+        let test = "\u{2009}hello \u{2009}world \u{2009}AAPL!!!"
             .styleSymbols(Style.font(symFont))
             .attributedString
 
-        let reference = NSMutableAttributedString(string: "$hello $world $AAPL!!!")
+        let reference = NSMutableAttributedString(string: "\u{2009}hello \u{2009}world \u{2009}AAPL!!!")
+        reference.addAttributes([AttributedStringKey.font: symFont], range: NSMakeRange(0, 6))
+        reference.addAttributes([AttributedStringKey.font: symFont], range: NSMakeRange(7, 6))
         reference.addAttributes([AttributedStringKey.font: symFont], range: NSMakeRange(14, 5))
 
         XCTAssertEqual(test, reference)
     }
 
     func testKeywords() {
-        let test = "?hello_world!!!"
+        let test = "\u{200A}hello_world!!!"
             .styleKeywords(Style.font(kwFont))
             .attributedString
 
-        let reference = NSMutableAttributedString(string: "hello world!!!")
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(0, 11))
+        let reference = NSMutableAttributedString(string: "\u{200A}hello world!!!")
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(0, 12))
 
         XCTAssertEqual(test, reference)
     }
 
     func testKeywordFollowedByHashtag() {
-        let test = "?hello_world ?Y/Y ?four #Hash!!!"
+        let test = "\u{200A}hello_world \u{200A}Y/Y \u{200A}four #Hash!!!"
             .styleKeywords(Style.font(kwFont))
             .styleHashtags(Style.font(htFont))
             .attributedString
 
-        let reference = NSMutableAttributedString(string: "hello world Y/Y four #Hash!!!")
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(0, 11))
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(12, 3))
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(16, 4))
-        reference.addAttributes([AttributedStringKey.font: htFont], range: NSMakeRange(21, 5))
+        let reference = NSMutableAttributedString(string: "\u{200A}hello world \u{200A}Y/Y \u{200A}four #Hash!!!")
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(0, 12))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(13, 4))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(18, 5))
+        reference.addAttributes([AttributedStringKey.font: htFont], range: NSMakeRange(24, 5))
 
         XCTAssertEqual(test, reference)
     }
 
     func testKeywordWithEmoji() {
-        let test = "🎁— Mixed #hash test… ?hello_world 😁 ?Y/Y ?four!!!"
+        let test = "🎁— Mixed #hash test… \u{200A}hello_world 😁 \u{200A}Y/Y \u{200A}four!!!"
             .styleKeywords(Style.font(kwFont))
             .styleHashtags(Style.font(htFont))
             .attributedString
 
-        let reference = NSMutableAttributedString(string: "🎁— Mixed #hash test… hello world 😁 Y/Y four!!!")
+        let reference = NSMutableAttributedString(string: "🎁— Mixed #hash test… \u{200A}hello world 😁 \u{200A}Y/Y \u{200A}four!!!")
         reference.addAttributes([AttributedStringKey.font: htFont], range: NSMakeRange(10, 5))
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(22, 11))
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(37, 3))
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(41, 4))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(22, 12))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(38, 4))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(43, 5))
 
         XCTAssertEqual(test, reference)
     }
 
     func testKeywordWithUnicode() {
-        let test = "$MSFT to… ?acquire #CyberSecurity software RiskIQ for $500M announcing soon. RiskIQ bolsters security capabilities for $MSFT's Windows and ?Azure."
+        let test = "\u{2009}MSFT to… \u{200A}acquire #CyberSecurity software RiskIQ for $500M announcing soon. RiskIQ bolsters security capabilities for \u{2009}MSFT's Windows and \u{200A}Azure."
             .styleSymbols(Style.font(symFont))
             .styleKeywords(Style.font(kwFont))
             .styleHashtags(Style.font(htFont))
             .attributedString
 
-        let reference = NSMutableAttributedString(string: "$MSFT to… acquire #CyberSecurity software RiskIQ for $500M announcing soon. RiskIQ bolsters security capabilities for $MSFT's Windows and Azure.")
+        let reference = NSMutableAttributedString(string: "\u{2009}MSFT to… \u{200A}acquire #CyberSecurity software RiskIQ for $500M announcing soon. RiskIQ bolsters security capabilities for \u{2009}MSFT's Windows and \u{200A}Azure.")
         reference.addAttributes([AttributedStringKey.font: symFont], range: NSMakeRange(0, 5))
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(10, 7))
-        reference.addAttributes([AttributedStringKey.font: htFont], range: NSMakeRange(18, 14))
-        reference.addAttributes([AttributedStringKey.font: symFont], range: NSMakeRange(118, 5))
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(138, 5))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(10, 8))
+        reference.addAttributes([AttributedStringKey.font: htFont], range: NSMakeRange(19, 14))
+        reference.addAttributes([AttributedStringKey.font: symFont], range: NSMakeRange(119, 5))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(139, 6))
 
         XCTAssertEqual(test, reference)
     }
 
     func testDoubleKeywordAtEndWithNoPunctuation() {
-        let test = "$JBL adds new $1B ?stock_buyback over next 2 years; roughly ~13% of current ?market_cap"
+        let test = "\u{2009}JBL adds new $1B \u{200A}stock_buyback over next 2 years; roughly ~13% of current \u{200A}market_cap"
             .styleSymbols(Style.font(symFont))
             .styleKeywords(Style.font(kwFont))
             .attributedString
 
-        let reference = NSMutableAttributedString(string: "$JBL adds new $1B stock buyback over next 2 years; roughly ~13% of current market cap")
+        let reference = NSMutableAttributedString(string: "\u{2009}JBL adds new $1B \u{200A}stock buyback over next 2 years; roughly ~13% of current \u{200A}market cap")
         reference.addAttributes([AttributedStringKey.font: symFont], range: NSMakeRange(0, 4))
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(18, 13))
-        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(75, 10))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(18, 14))
+        reference.addAttributes([AttributedStringKey.font: kwFont], range: NSMakeRange(76, 11))
 
         XCTAssertEqual(test, reference)
     }
